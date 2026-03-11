@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>AETHEREAL | A nova forma de criar arquitetura.</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;700&family=Syncopate:wght@400;700&display=swap" rel="stylesheet" />
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- GSAP / Lenis -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <script src="https://unpkg.com/@studio-freight/lenis@1.0.33/dist/lenis.min.js"></script>
+    <style>
+        /* --- CORE --- */
+        :root {
+            --c-bg: #E3E1DC; /* Stone/Concrete */
+            --c-dark: #121212;
+            --c-accent: #374336; /* Deep Moss */
+            --font-display: 'Syncopate', sans-serif;
+            --font-body: 'Manrope', sans-serif;
+        }
+        body {
+            background-color: var(--c-bg);
+            color: var(--c-dark);
+            font-family: var(--font-body);
+            margin: 0;
+            overflow-x: hidden;
+            cursor: auto;
+            opacity: 0; /* JS fade in */
+        }
+        /* --- LAYOUT UTILS --- */
+        .wrapper {
+            position: relative;
+            z-index: 10;
+            background-color: var(--c-bg);
+            margin-bottom: 100vh;
+            box-shadow: 0 50px 100px rgba(0,0,0,0.5);
+        }
+        /* --- TEXT REVEAL UTILS --- */
+        .word-wrap {
+            display: inline-block;
+            overflow: hidden;
+            vertical-align: top;
+            padding-bottom: 0.1em;
+        }
+        .word-inner {
+            display: inline-block;
+            transform: translateY(110%);
+        }
+        /* --- PRELOADER --- */
+        .loader {
+            position: fixed;
+            inset: 0;
+            background: #000;
+            z-index: 10000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+        }
+        .loader-text {
+            font-family: var(--font-display);
+            font-size: 4vw;
+            font-weight: 700;
+            text-align: center;
+        }
+        .loader-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 4px;
+            background: #fff;
+            width: 0%;
+        }
+        /* --- CARD STACK SECTION --- */
+        .stack-section {
+            padding: 15vh 0;
+            background: var(--c-dark);
+            color: #E3E1DC;
+            position: relative;
+        }
+        .stack-container {
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+            padding-bottom: 10vh;
+        }
+        .card-item {
+            position: sticky;
+            top: 15vh; /* Cards stick here */
+            height: 70vh;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 5vh;
+        }
+        .card-inner {
+            width: 90%;
+            height: 100%;
+            background: #1a1a1a;
+            border: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+            overflow: hidden;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+        }
+        .card-content {
+            padding: 4rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            background: #1a1a1a;
+            z-index: 2;
+        }
+        .card-img-wrap {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        .card-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 1.5s ease;
+        }
+        .card-inner:hover .card-img {
+            transform: scale(1.1);
+        }
+        /* Mobile adjustment */
+        @media (max-width: 768px) {
+            .card-inner { grid-template-columns: 1fr; }
+            .card-item { top: 10vh; height: 80vh; }
+            .card-img-wrap { height: 40%; order: -1; }
+            .card-content { padding: 2rem; }
+        }
+        /* --- FOOTER REVEAL --- */
+        .footer-sticky {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            z-index: 1;
+            background: #111;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        /* --- TYPOGRAPHY --- */
+        .display { font-family: var(--font-display); }
+        /* --- NOISE --- */
+        .noise-overlay {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 9000;
+            opacity: 0.05;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E");
+        }
+        
+        /* Componente Botão */
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #ffffff;
+            color: #121212;
+            padding: 1.25rem 3rem;
+            text-transform: uppercase;
+            font-family: var(--font-body);
+            font-weight: 700;
+            font-size: 0.875rem;
+            letter-spacing: 0.1em;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid transparent;
+        }
+        .btn-primary::before {
+            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0,0,0,0.1), transparent);
+            transition: left 0.6s ease;
+        }
+        .btn-primary:hover::before { left: 100%; }
+        .btn-primary:hover {
+            box-shadow: 0 10px 30px rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+        }
+        .btn-dark {
+            background-color: var(--c-dark);
+            color: #fff;
+            border: 1px solid var(--c-dark);
+        }
+        .btn-dark::before {
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        }
+        .btn-dark:hover {
+            box-shadow: 0 10px 30px rgba(18,18,18,0.3);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body class="">
+    <!-- UTILS -->
+    <div class="noise-overlay"></div>
+    <!-- PRELOADER -->
+    <div class="loader">
+        <div class="loader-text">AETHEREAL<br><span class="text-sm tracking-[0.5em] font-body font-light opacity-50 block mt-4">VISUALIZAÇÃO INSTANTÂNEA</span></div>
+        <div class="loader-bar"></div>
+    </div>
+
+    <!-- NAVIGATION -->
+    <nav class="fixed top-0 w-full p-8 flex justify-between items-center z-50 mix-blend-difference text-white">
+        <div class="display font-bold text-xl tracking-tighter">AETHEREAL</div>
+        <div class="hidden md:flex gap-10 text-xs uppercase tracking-widest">
+            <a class="hover:text-gray-300 transition-colors" href="#problema">O Problema</a>
+            <a class="hover:text-gray-300 transition-colors" href="#solucao">A Solução</a>
+            <a class="hover:text-gray-300 transition-colors" href="#como-funciona">Como Funciona</a>
+            <a class="hover:text-gray-300 transition-colors" href="#cta">Começar</a>
+        </div>
+        <div class="md:hidden">MENU</div>
+    </nav>
+
+    <!-- WRAPPER -->
+    <div class="wrapper">
+        
+        <!-- 1) HERO -->
+        <section class="min-h-screen relative flex items-center justify-center overflow-hidden">
+            <img alt="Hero Architecture" class="absolute inset-0 w-full h-full object-cover brightness-50 hero-img" src="assets/068eb8ef6075.webp"/>
+            
+            <div class="relative z-10 text-center text-white mix-blend-difference flex flex-col items-center px-6 mt-20 md:mt-0">
+                <div class="overflow-hidden mb-6">
+                    <p class="text-sm uppercase tracking-[0.5em] opacity-0 hero-fade">Arquitetura explorada por redes neurais</p>
+                </div>
+                
+                <h1 class="display text-[6vw] md:text-[5vw] leading-[1.1] max-w-5xl hero-text overflow-hidden mx-auto">
+                    <span class="block translate-y-full pb-2">CRIE PROJETOS</span>
+                    <span class="block translate-y-full text-transparent" style="-webkit-text-stroke: 1px rgba(255,255,255,0.8);">ARQUITETÔNICOS</span>
+                    <span class="block translate-y-full text-[4vw] md:text-[3vw] mt-2">IMPRESSIONANTES EM SEGUNDOS.</span>
+                </h1>
+                
+                <p class="mt-12 text-lg md:text-xl font-light opacity-0 hero-fade max-w-3xl mx-auto leading-relaxed text-gray-300">
+                    Nossa tecnologia baseada em redes neurais avançadas transforma fotos ou descrições de ambientes em visualizações arquitetônicas realistas e criativas diretamente no aplicativo.
+                </p>
+
+                <div class="mt-16 opacity-0 hero-fade flex flex-col items-center gap-6">
+                    <a href="#cta" class="btn-primary">Criar meu primeiro projeto</a>
+                    <span class="text-xs uppercase tracking-widest opacity-50">Explore novas ideias sem renderizações demoradas.</span>
+                </div>
+            </div>
+            
+            <!-- Scroll Indicator -->
+            <div class="absolute bottom-10 left-1/2 -translate-x-1/2 z-10 text-white opacity-50 mix-blend-difference hero-fade">
+                <div class="w-px h-16 bg-white mx-auto animate-pulse"></div>
+            </div>
+        </section>
+
+        <!-- 2) PROBLEMA -->
+        <section id="problema" class="py-32 px-6 md:px-20 max-w-[1800px] mx-auto border-b border-black/10">
+            <div class="text-xs uppercase tracking-widest mb-16 opacity-50">01 / O Problema</div>
+            
+            <div class="grid md:grid-cols-[1fr_1.5fr] gap-16 items-start">
+                <div>
+                    <h2 class="display text-4xl md:text-6xl leading-tight split-animate">
+                        Criar visualizações<br/>
+                        <span class="text-[var(--c-accent)]">realistas leva tempo.</span>
+                    </h2>
+                </div>
+                <div class="text-xl md:text-2xl font-light leading-relaxed text-gray-700">
+                    <p class="mb-10 split-animate">Arquitetos e designers normalmente precisam enfrentar processos longos e repetitivos que tornam a fase criativa lenta e limitam a exploração de novas ideias:</p>
+                    
+                    <ul class="space-y-6 text-lg text-gray-600 font-normal">
+                        <li class="flex items-center gap-4 split-animate"><span class="w-2 h-2 bg-black rounded-full"></span> modelar o ambiente em 3D</li>
+                        <li class="flex items-center gap-4 split-animate"><span class="w-2 h-2 bg-black rounded-full"></span> configurar iluminação e materiais</li>
+                        <li class="flex items-center gap-4 split-animate"><span class="w-2 h-2 bg-black rounded-full"></span> renderizar imagens por horas</li>
+                        <li class="flex items-center gap-4 split-animate"><span class="w-2 h-2 bg-black rounded-full"></span> repetir o processo diversas vezes</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3) SOLUÇÃO & COMO FUNCIONA -->
+        <section id="solucao" class="py-32 px-6 md:px-20 max-w-[1800px] mx-auto hidden-overflow">
+            <div class="text-xs uppercase tracking-widest mb-16 opacity-50">02 / A Solução</div>
+            
+            <div class="text-center max-w-4xl mx-auto mb-32">
+                <h2 class="display text-4xl md:text-6xl mb-8 split-animate">Uma nova forma de explorar arquitetura.</h2>
+                <p class="text-xl text-gray-600 font-light leading-relaxed split-animate">
+                    Nosso aplicativo utiliza tecnologia de redes neurais avançadas para gerar visualizações arquitetônicas altamente realistas de forma instantânea. Com poucos passos você pode transformar qualquer espaço em um novo conceito arquitetônico.
+                </p>
+            </div>
+        </section>
+
+        <!-- STACKING CARDS PARA "COMO FUNCIONA" -->
+        <section id="como-funciona" class="stack-section bg-[var(--c-dark)]">
+            <div class="text-center mb-20 px-6">
+                <div class="text-xs uppercase tracking-widest mb-4 opacity-50">03 / Como Funciona</div>
+                <h2 class="display text-4xl md:text-6xl text-white split-animate">TRÊS PASSOS SIMPLES</h2>
+            </div>
+            
+            <div class="stack-container">
+                <!-- Passo 1 -->
+                <div class="card-item">
+                    <div class="card-inner">
+                        <div class="card-content">
+                            <div>
+                                <div class="text-6xl display mb-6 text-gray-500 opacity-20 hidden md:block">01</div>
+                                <h3 class="text-3xl font-bold text-white mb-6">Envie uma imagem do ambiente</h3>
+                                <div class="text-gray-400 font-light text-lg mb-8 leading-relaxed">
+                                    Pode ser uma foto da sua casa, um espaço vazio ou um ambiente que deseja transformar.<br><br>A tecnologia analisa as dimensões e estrutura do espaço automaticamente.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-img-wrap">
+                            <img alt="Passo 1" class="card-img object-cover w-full h-full" src="assets/98984301b87c.webp"/>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Passo 2 -->
+                <div class="card-item">
+                    <div class="card-inner">
+                        <div class="card-content">
+                            <div>
+                                <div class="text-6xl display mb-6 text-gray-500 opacity-20 hidden md:block">02</div>
+                                <h3 class="text-3xl font-bold text-white mb-6">Descreva o estilo desejado</h3>
+                                <div class="text-gray-400 font-light text-lg mb-8 leading-relaxed">
+                                    Diga para a rede neural o que você quer ver. Exemplos práticos:
+                                </div>
+                                <ul class="space-y-4 text-sm text-gray-300 uppercase tracking-widest border-l border-white/20 pl-6">
+                                    <li>• Cozinha moderna</li>
+                                    <li>• Quarto minimalista</li>
+                                    <li>• Sala contemporânea</li>
+                                    <li>• Design industrial masculino</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="card-img-wrap">
+                            <img alt="Passo 2" class="card-img object-cover w-full h-full" src="assets/23c4e5216783.webp"/>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Passo 3 -->
+                <div class="card-item">
+                    <div class="card-inner">
+                        <div class="card-content">
+                            <div>
+                                <div class="text-6xl display mb-6 text-gray-500 opacity-20 hidden md:block">03</div>
+                                <h3 class="text-3xl font-bold text-white mb-6">Geração do projeto</h3>
+                                <div class="text-gray-400 font-light text-lg mb-8 leading-relaxed">
+                                    Em poucos segundos, nossa tecnologia cria uma nova visualização detalhada do ambiente contendo:
+                                </div>
+                                <ul class="space-y-4 text-sm text-gray-300">
+                                    <li class="flex items-center gap-3">✔ Materiais realistas</li>
+                                    <li class="flex items-center gap-3">✔ Iluminação natural calculada</li>
+                                    <li class="flex items-center gap-3">✔ Composição arquitetônica equilibrada</li>
+                                    <li class="flex items-center gap-3">✔ Estilo coerente com o espaço</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="card-img-wrap">
+                            <img alt="Passo 3" class="card-img object-cover w-full h-full" src="assets/020117376942.webp"/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4) EXEMPLOS E PÚBLICO -->
+        <section class="py-32 px-6 md:px-20 max-w-[1800px] mx-auto border-b border-black/10">
+            <div class="grid md:grid-cols-2 gap-24">
+                
+                <!-- Exemplos -->
+                <div>
+                    <div class="text-xs uppercase tracking-widest mb-12 opacity-50 split-animate">Exemplos de Transfomação</div>
+                    <h3 class="display text-3xl mb-8 split-animate">Veja como um ambiente pode ganhar<br>novas possibilidades:</h3>
+                    
+                    <div class="space-y-8 mt-12 border-l border-black/10 pl-8">
+                        <div class="split-animate">
+                            <p class="text-gray-500 text-sm mb-1 uppercase tracking-widest">Antes</p>
+                            <p class="text-xl font-bold">Cozinha simples</p>
+                            <div class="w-8 h-px bg-black/20 my-3"></div>
+                            <p class="text-[var(--c-accent)] text-lg uppercase tracking-widest">Cozinha moderna planejada</p>
+                        </div>
+                        <div class="split-animate">
+                            <p class="text-gray-500 text-sm mb-1 uppercase tracking-widest">Antes</p>
+                            <p class="text-xl font-bold">Quarto vazio</p>
+                            <div class="w-8 h-px bg-black/20 my-3"></div>
+                            <p class="text-[var(--c-accent)] text-lg uppercase tracking-widest">Quarto elegante e minimalista</p>
+                        </div>
+                        <div class="split-animate">
+                            <p class="text-gray-500 text-sm mb-1 uppercase tracking-widest">Antes</p>
+                            <p class="text-xl font-bold">Sala comum</p>
+                            <div class="w-8 h-px bg-black/20 my-3"></div>
+                            <p class="text-[var(--c-accent)] text-lg uppercase tracking-widest">Sala contemporânea sofisticada</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Público -->
+                <div>
+                    <div class="text-xs uppercase tracking-widest mb-12 opacity-50 split-animate">Para quem é</div>
+                    <div class="grid grid-cols-1 gap-12">
+                        <div class="border border-black/10 p-8 bg-white/50 split-animate">
+                            <h4 class="display text-xl mb-4">Arquitetos</h4>
+                            <p class="text-gray-600 font-light">Explore conceitos rapidamente antes de modelar projetos completos, acelerando reuniões de briefing.</p>
+                        </div>
+                        <div class="border border-black/10 p-8 bg-white/50 split-animate">
+                            <h4 class="display text-xl mb-4">Designers de Interiores</h4>
+                            <p class="text-gray-600 font-light">Teste estilos e ideias sem precisar reconstruir ambientes inteiros em softwares 3D laboriosos.</p>
+                        </div>
+                        <div class="border border-black/10 p-8 bg-white/50 split-animate">
+                            <h4 class="display text-xl mb-4">Imobiliárias e Corretores</h4>
+                            <p class="text-gray-600 font-light">Apresente imóveis com ambientes visualmente transformados, encantando o cliente no primeiro contato.</p>
+                        </div>
+                        <div class="border border-black/10 p-8 bg-white/50 split-animate">
+                            <h4 class="display text-xl mb-4">Pessoas Planejando Reformas</h4>
+                            <p class="text-gray-600 font-light">Visualize diferentes estilos em sua própria casa antes de gastar qualquer valor iniciar uma obra material.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5) DIFERENCIAIS E BENEFÍCIOS -->
+        <section class="py-32 bg-[#1a1a1a] text-white">
+            <div class="px-6 md:px-20 max-w-[1800px] mx-auto">
+                <div class="text-center mb-24">
+                    <h2 class="display text-4xl md:text-5xl split-animate">Uma Nova Era na Criação</h2>
+                    <p class="mt-6 text-gray-400 font-light max-w-2xl mx-auto split-animate">A tecnologia projetada para gerar imagens arquitetônicas com alto nível de detalhe de forma intuitiva.</p>
+                </div>
+
+                <div class="grid md:grid-cols-3 gap-16 text-center">
+                    <div class="split-animate">
+                        <div class="text-4xl mb-6">💡</div>
+                        <h4 class="display text-lg mb-4">Exploração Ilimitada</h4>
+                        <p class="text-gray-400 font-light text-sm leading-relaxed">Gere diversas ideias de arquitetura e decoração em poucos segundos. O único limite é a sua própria imaginação.</p>
+                    </div>
+                    
+                    <div class="split-animate">
+                        <div class="text-4xl mb-6">⚡</div>
+                        <h4 class="display text-lg mb-4">Processo Simples</h4>
+                        <p class="text-gray-400 font-light text-sm leading-relaxed">Sem modelagem 3D dolorosa. Sem renderizações demoradas de horas. Sem hardwares ou softwares complexos.</p>
+                    </div>
+
+                    <div class="split-animate">
+                        <div class="text-4xl mb-6">📸</div>
+                        <h4 class="display text-lg mb-4">Visualizações Realistas</h4>
+                        <p class="text-gray-400 font-light text-sm leading-relaxed">A inteligência computacional mapeia profundidade e luz com excelência, usando fotos reais de ambientes e trazendo resultados mágicos.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- END WRAPPER - This makes space for the sticky footer behind -->
+    </div>
+
+    <!-- 6) CTA FINAL (FOOTER STICKY) -->
+    <footer id="cta" class="footer-sticky">
+        <!-- Footer Background Image com overlay escuro -->
+        <img class="absolute inset-0 w-full h-full object-cover opacity-20 pointer-events-none" src="assets/0cd68e7f5b6e.webp" alt=""/>
+        <div class="absolute inset-0 bg-black/60 pointer-events-none"></div>
+
+        <div class="relative z-10 text-center px-6 max-w-5xl mx-auto flex flex-col items-center">
+            
+            <div class="overflow-hidden mb-6">
+                <p class="text-xs uppercase tracking-[0.3em] text-gray-400 mb-4 split-animate">A nova forma de criar arquitetura.</p>
+            </div>
+            
+            <h2 class="display text-[5vw] leading-none mb-10 text-white split-animate">
+                DESCUBRA NOVAS POSSIBILIDADES<br>
+                <span class="text-transparent" style="-webkit-text-stroke: 1px rgba(255,255,255,0.7);">PARA QUALQUER ESPAÇO</span>
+            </h2>
+
+            <p class="text-xl md:text-2xl text-gray-300 font-light mb-16 split-animate">
+                Transforme ambientes com uma nova forma de criação arquitetônica instantânea.
+            </p>
+            
+            <div class="split-animate">
+                <a class="btn-primary" href="#">
+                    Começar Agora
+                </a>
+            </div>
+
+            <div class="mt-32 text-[10px] uppercase tracking-widest text-gray-500 font-mono">
+                © 2025 AETHEREAL DESIGN SYSTEM / IA NETWORKS
+            </div>
+        </div>
+    </footer>
+
+
+    <script>
+        // --- SETUP ---
+        gsap.registerPlugin(ScrollTrigger);
+
+        // --- LENIS SCROLL ---
+        const lenis = new Lenis({
+            duration: 1.2,
+            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+            direction: 'vertical',
+            smooth: true,
+        });
+        function raf(time) {
+            lenis.raf(time);
+            requestAnimationFrame(raf);
+        }
+        requestAnimationFrame(raf);
+
+        // --- TEXT SPLITTER UTILITY ---
+        function splitTextToWords(element) {
+            const text = element.innerText;
+            const words = text.split(' ');
+            element.innerHTML = '';
+            words.forEach(word => {
+                const wordWrap = document.createElement('span');
+                wordWrap.classList.add('word-wrap');
+                wordWrap.innerHTML = `<span class="word-inner">${word}&nbsp;</span>`;
+                element.appendChild(wordWrap);
+            });
+        }
+
+        document.querySelectorAll('.split-animate').forEach(el => {
+            splitTextToWords(el);
+        });
+
+        // --- LOADER ---
+        const loadTl = gsap.timeline({
+            onComplete: () => {
+                document.body.style.opacity = 1;
+                initSite();
+            }
+        });
+
+        loadTl.to('.loader-bar', { width: '100%', duration: 1.5, ease: 'power2.inOut' })
+              .to('.loader-text', { y: -50, opacity: 0, duration: 0.5 })
+              .to('.loader', { yPercent: -100, duration: 1, ease: 'power4.inOut' });
+
+        function initSite() {
+            // Hero Animations
+            gsap.to('.hero-text span', { 
+                y: 0, 
+                stagger: 0.15, 
+                duration: 1.5, 
+                ease: 'power4.out' 
+            });
+            gsap.to('.hero-fade', { opacity: 1, duration: 2, delay: 0.8, stagger: 0.3 });
+            
+            // Hero Parallax
+            gsap.to('.hero-img', {
+                yPercent: 30,
+                ease: 'none',
+                scrollTrigger: {
+                    trigger: '.hero-img',
+                    start: 'top top',
+                    end: 'bottom top',
+                    scrub: true
+                }
+            });
+
+            // --- TEXT REVEAL ON SCROLL ---
+            const splitElements = document.querySelectorAll('.split-animate');
+            splitElements.forEach(el => {
+                const words = el.querySelectorAll('.word-inner');
+                gsap.to(words, {
+                    y: "0%",
+                    duration: 1,
+                    ease: "power3.out",
+                    stagger: 0.02,
+                    scrollTrigger: {
+                        trigger: el,
+                        start: "top 85%", 
+                        toggleActions: "play none none reverse"
+                    }
+                });
+            });
+
+            // --- CARD STACK ANIMATION ---
+            const cards = gsap.utils.toArray('.card-item');
+            
+            cards.forEach((card, i) => {
+                const nextCard = cards[i+1];
+                if (nextCard) {
+                    gsap.to(card.querySelector('.card-inner'), {
+                        scale: 0.9,
+                        opacity: 0.4, 
+                        ease: "none",
+                        scrollTrigger: {
+                            trigger: nextCard,
+                            start: "top bottom", 
+                            end: "top 15vh",    
+                            scrub: true
+                        }
+                    });
+                }
+            });
+
+            // Footer Parallax Effect
+            gsap.from('.footer-sticky > div', {
+                y: 100,
+                opacity: 0.5,
+                scale: 0.9,
+                scrollTrigger: {
+                    trigger: '.footer-sticky',
+                    start: 'top bottom',
+                    end: 'bottom bottom',
+                    scrub: true
+                }
+            });
+        }
+    </script>
+</body>
+</html>

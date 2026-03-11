@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>AETHEREAL | Advanced Design System</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;700&family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- GSAP / Lenis -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <script src="https://unpkg.com/@studio-freight/lenis@1.0.33/dist/lenis.min.js"></script>
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        :root {
+            /* Colors */
+            --c-bg: #E3E1DC; /* Stone / Concrete */
+            --c-bg-rgb: 227, 225, 220;
+            --c-bg-hsl: 43, 12%, 88%;
+            
+            --c-dark: #121212;
+            --c-dark-rgb: 18, 18, 18;
+            --c-dark-hsl: 0, 0%, 7%;
+
+            --c-accent: #374336; /* Deep Moss */
+            --c-accent-rgb: 55, 67, 54;
+            --c-accent-hsl: 115, 11%, 24%;
+
+            --c-primary: #FFFFFF;
+            --c-primary-rgb: 255, 255, 255;
+            
+            --c-secondary: #9CA3AF;
+            --c-feedback-success: #10B981;
+            --c-feedback-error: #EF4444;
+
+            /* Fonts */
+            --font-display: 'Syncopate', sans-serif;
+            --font-body: 'Manrope', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        body {
+            background-color: var(--c-bg); /* Fato de ser BRANCO/STONE */
+            color: var(--c-dark);
+            font-family: var(--font-body);
+            margin: 0;
+            overflow-x: hidden;
+            opacity: 0; 
+        }
+
+        .display { font-family: var(--font-display); }
+        .mono { font-family: var(--font-mono); }
+
+        .wrapper {
+            position: relative;
+            z-index: 10;
+            background-color: var(--c-bg);
+            box-shadow: 0 50px 100px rgba(0,0,0,0.5);
+        }
+
+        /* TEXT REVEAL */
+        .word-wrap {
+            display: inline-block;
+            overflow: hidden;
+            vertical-align: top;
+            padding-bottom: 0.1em;
+        }
+        .word-inner {
+            display: inline-block;
+            transform: translateY(110%);
+        }
+
+        /* OUTLINE TEXT (Lettering Transparente) */
+        .text-outline {
+            color: transparent;
+            -webkit-text-stroke: 1px rgba(255, 255, 255, 0.5);
+            transition: all 0.5s ease;
+        }
+        .text-outline:hover {
+            color: rgba(255, 255, 255, 1);
+            -webkit-text-stroke: 1px transparent;
+            text-shadow: 0 0 20px rgba(255,255,255,0.7);
+        }
+        .text-outline-dark {
+            color: transparent;
+            -webkit-text-stroke: 1px rgba(18, 18, 18, 0.5);
+            transition: all 0.5s ease;
+        }
+        .text-outline-dark:hover {
+            color: var(--c-dark);
+            -webkit-text-stroke: 1px transparent;
+        }
+
+        /* PRELOADER */
+        .loader {
+            position: fixed; inset: 0; background: var(--c-bg); z-index: 10000;
+            display: flex; justify-content: center; align-items: center; color: var(--c-dark);
+        }
+        .loader-text { font-family: var(--font-display); font-size: 5vw; font-weight: 700; }
+        .loader-bar { position: absolute; bottom: 0; left: 0; height: 4px; background: var(--c-dark); width: 0%; }
+
+        /* NOISE Overlay */
+        .noise-overlay {
+            position: fixed; inset: 0; pointer-events: none; z-index: 9000; opacity: 0.05;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E");
+        }
+
+        /* COMPONENTS */
+        /* Glow Button */
+        .btn-glow {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem 2.5rem;
+            background: var(--c-dark);
+            color: #fff;
+            text-transform: uppercase;
+            font-family: var(--font-body);
+            font-weight: 700;
+            font-size: 0.875rem;
+            letter-spacing: 0.1em;
+            transition: all 0.4s ease;
+            overflow: hidden;
+            border-radius: 2px;
+            cursor: pointer;
+        }
+        .btn-glow::before {
+            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.6s ease;
+        }
+        .btn-glow:hover::before { left: 100%; }
+        .btn-glow:hover { box-shadow: 0 10px 30px rgba(18,18,18,0.3); transform: translateY(-3px); }
+
+        .btn-outline {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem 2.5rem;
+            border: 1px solid var(--c-dark);
+            color: var(--c-dark);
+            text-transform: uppercase;
+            font-size: 0.875rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            transition: all 0.4s ease;
+            cursor: pointer;
+        }
+        .btn-outline:hover {
+            background: var(--c-dark);
+            color: #fff;
+            box-shadow: 0 10px 30px rgba(18,18,18,0.2);
+        }
+
+        /* Custom Input */
+        .input-group { position: relative; margin-bottom: 2rem; }
+        .input-field {
+            width: 100%; padding: 1rem 0; background: transparent; border: none;
+            border-bottom: 1px solid rgba(18,18,18,0.3); color: var(--c-dark);
+            font-size: 1rem; transition: border-color 0.3s ease;
+            outline: none; font-family: var(--font-body);
+        }
+        .input-field:focus { border-bottom-color: var(--c-dark); }
+        .input-label {
+            position: absolute; top: 1rem; left: 0; font-size: 0.875rem;
+            color: rgba(18,18,18,0.5); text-transform: uppercase; letter-spacing: 0.1em;
+            pointer-events: none; transition: all 0.3s ease; font-weight: 500;
+        }
+        .input-field:focus ~ .input-label, .input-field:not(:placeholder-shown) ~ .input-label {
+            top: -0.75rem; font-size: 0.65rem; color: var(--c-dark); font-weight: 700;
+        }
+
+        /* Badge */
+        .badge {
+            display: inline-flex; align-items: center; padding: 0.35rem 0.85rem;
+            border-radius: 999px; font-size: 0.65rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.1em;
+        }
+        .badge-dark { background: var(--c-dark); color: #fff; }
+        .badge-accent { background: var(--c-accent); color: #fff; }
+
+        /* Tooltip */
+        .tooltip-wrap { position: relative; display: inline-block; cursor: pointer; }
+        .tooltip-content {
+            position: absolute; bottom: 130%; left: 50%; transform: translateX(-50%) translateY(10px) scale(0.95);
+            background: var(--c-dark); color: #fff; padding: 0.5rem 1rem;
+            font-size: 0.75rem; border-radius: 4px; opacity: 0; pointer-events: none;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); white-space: nowrap; font-family: var(--font-mono);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        .tooltip-wrap:hover .tooltip-content { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(227, 225, 220, 0.8); backdrop-filter: blur(15px);
+            z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.5s ease;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        .modal-box {
+            background: #fff; padding: 4rem; width: 90%; max-width: 600px;
+            transform: translateY(100px) scale(0.95); transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 40px 100px rgba(0,0,0,0.1); border: 1px solid rgba(0,0,0,0.05); border-radius: 2px;
+        }
+        .modal-overlay.active .modal-box { transform: translateY(0) scale(1); }
+        .close-modal { cursor: pointer; display: inline-block; }
+
+        /* Custom Selection */
+        ::selection { background: var(--c-dark); color: #fff; }
+
+        /* Card STACK Layout */
+        .stack-container { position: relative; width: 100%; padding-bottom: 5vh; }
+        .card-item { position: sticky; top: 15vh; height: 75vh; width: 100%; display: flex; align-items: center; justify-content: center; margin-bottom: 5vh; }
+        .card-inner {
+            width: 100%; height: 100%; background: #fff; border: 1px solid rgba(0,0,0,0.05);
+            overflow: hidden; display: grid; grid-template-columns: 1fr 1.2fr;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.08); color: var(--c-dark);
+        }
+        .card-inner.dark { background: var(--c-dark); color: #fff; border: 1px solid rgba(255,255,255,0.1); }
+        .card-content { padding: 4rem; display: flex; flex-direction: column; justify-content: space-between; z-index: 2; position: relative; }
+        .card-img-wrap { position: relative; width: 100%; height: 100%; overflow: hidden; }
+        .card-img { width: 100%; height: 100%; object-fit: cover; transition: transform 1.5s ease, filter 1.5s ease; filter: grayscale(100%); }
+        .card-inner:hover .card-img { transform: scale(1.05); filter: grayscale(0%); }
+
+        @media(max-width: 768px) {
+            .card-inner { grid-template-columns: 1fr; }
+            .card-img-wrap { height: 40%; order: -1; }
+            .card-item { height: auto; position: relative; margin-bottom: 2rem; top: 0; }
+        }
+
+        /* Ambient Glow Background */
+        .ambient-glow {
+            position: absolute; width: 60vw; height: 60vw; background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+            border-radius: 50%; pointer-events: none; z-index: 0; transform: translate(-50%, -50%);
+            mix-blend-mode: screen;
+        }
+
+        /* Hero Text Animation override */
+        .hero-text-anim span {
+            display: inline-block;
+        }
+        
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.05);
+        }
+
+    </style>
+</head>
+<body class="bg-[var(--c-bg)]">
+    <!-- UTILS -->
+    <div class="noise-overlay"></div>
+    <div class="loader">
+        <div class="loader-text text-outline-dark">SYSTEM.INIT</div>
+        <div class="loader-bar"></div>
+    </div>
+
+    <!-- NAVBAR -->
+    <nav class="fixed top-0 w-full p-6 md:p-8 flex justify-between items-center z-50 text-black mix-blend-exclusion">
+        <div class="display font-bold text-xl tracking-tighter text-white">AETHEREAL</div>
+        <div class="hidden md:flex gap-10 text-xs uppercase tracking-[0.2em] text-white">
+            <a href="#hero" class="hover:opacity-50 transition-opacity">Showcase</a>
+            <a href="#typography" class="hover:opacity-50 transition-opacity">Typography</a>
+            <a href="#colors" class="hover:opacity-50 transition-opacity">Colors</a>
+            <a href="#components" class="hover:opacity-50 transition-opacity">Components</a>
+            <a href="#icons" class="hover:opacity-50 transition-opacity">Icons</a>
+        </div>
+        <div class="md:hidden text-xs uppercase tracking-widest text-white">MENU</div>
+    </nav>
+
+    <div class="wrapper pb-20">
+        <!-- 1) HERO DEMONSTRATION -->
+        <section id="hero" class="h-screen relative flex items-center justify-center overflow-hidden bg-white">
+            <img src="./068eb8ef6075.webp" class="absolute inset-0 w-full h-full object-cover opacity-90 hero-img parallax-img" alt="Hero background"/>
+            
+            <div class="ambient-glow" style="top: 50%; left: 50%;"></div>
+
+            <!-- Focus on Mix-blend and Transparent Lettering as requested -->
+            <div class="relative z-10 w-full px-6 md:px-20 text-white flex flex-col items-center justify-center mix-blend-difference">
+                <div class="overflow-hidden mb-8">
+                    <p class="text-sm md:text-md uppercase tracking-[0.6em] hero-fade opacity-0 mix-blend-plus-lighter text-gray-300 font-bold">The Complete Spec</p>
+                </div>
+                
+                <h1 class="display text-[12vw] md:text-[14vw] leading-none text-center font-bold relative z-10 w-full flex flex-col items-center gap-2">
+                    <span class="overflow-hidden block w-full text-center">
+                        <span class="block hero-text-anim translate-y-[120%] tracking-tight">DESIGN</span>
+                    </span>
+                    <span class="overflow-hidden block w-full text-center text-outline scale-[1.02] transform">
+                        <span class="block hero-text-anim translate-y-[120%] tracking-tight">SYSTEM</span>
+                    </span>
+                </h1>
+                
+                <div class="mt-16 overflow-hidden hero-fade opacity-0 flex flex-wrap justify-center gap-6 mix-blend-normal">
+                    <a href="#components" class="btn-glow bg-white text-black hover:bg-gray-200" style="color:#000;">Explore UI Base</a>
+                    <a href="#typography" class="btn-outline border-white text-white hover:bg-white hover:text-black">Architecture</a>
+                </div>
+            </div>
+            
+            <div class="absolute bottom-10 left-1/2 -translate-x-1/2 z-10 mix-blend-difference text-white opacity-50 hero-fade">
+                <div class="text-[10px] uppercase tracking-[0.4em] mb-2 flex items-center justify-center gap-4">
+                    <span>Scroll To Discover</span>
+                    <i class="ph ph-arrow-down"></i>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2) TYPOGRAPHY -->
+        <section id="typography" class="py-32 px-6 md:px-20 max-w-[1600px] mx-auto border-b border-black/10">
+            <div class="flex items-center gap-4 mb-24 opacity-40 split-animate">
+                <div class="text-xs uppercase tracking-widest font-bold">01</div>
+                <div class="w-16 h-px bg-black"></div>
+                <div class="text-xs uppercase tracking-widest">Typography Scale & Strategy</div>
+            </div>
+
+            <div class="grid md:grid-cols-[1fr_2fr] gap-20">
+                <div class="pr-10 border-r border-black/5 hidden md:block relative">
+                    <div class="sticky top-40">
+                        <h3 class="display text-3xl mb-8">Design Language</h3>
+                        <div class="space-y-8 text-sm text-gray-700">
+                            <div>
+                                <p class="text-xs uppercase tracking-widest opacity-50 mb-2">Display Stack</p>
+                                <p class="font-bold text-black display text-lg">Syncopate</p>
+                                <p class="mono text-xs opacity-60 mt-1">Weights: 400, 700 / Fallback: sans-serif</p>
+                            </div>
+                            <div>
+                                <p class="text-xs uppercase tracking-widest opacity-50 mb-2">Body Stack</p>
+                                <p class="font-bold text-black text-lg">Manrope</p>
+                                <p class="mono text-xs opacity-60 mt-1">Weights: 300, 400, 500, 700 / Fallback: sans-serif</p>
+                            </div>
+                            <div>
+                                <p class="text-xs uppercase tracking-widest opacity-50 mb-2">Monospace</p>
+                                <p class="font-bold text-black mono text-lg">JetBrains Mono</p>
+                                <p class="mono text-xs opacity-60 mt-1">Weights: 400, 700 / Fallback: monospace</p>
+                            </div>
+                            
+                            <div class="p-6 bg-white border border-black/5 rounded mt-12 shadow-sm">
+                                <p class="mono text-xs mb-3 font-bold text-black">/* Font Loading Strategy */</p>
+                                <ul class="mono text-[10px] space-y-2 opacity-70 list-disc pl-4">
+                                    <li>Preconnect to Google Fonts CDN.</li>
+                                    <li>Swap display applied for FOUT prevention.</li>
+                                    <li>Local font stack prioritized in fallback.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-16">
+                    <!-- Headings -->
+                    <div class="space-y-12">
+                        <div class="flex flex-col md:flex-row md:items-baseline gap-4 md:gap-8 pb-8 border-b border-black/5 group cursor-default">
+                            <div class="w-24 text-xs font-mono opacity-40 uppercase">h1</div>
+                            <div class="flex-1 overflow-hidden">
+                                <h1 class="display text-6xl md:text-8xl leading-none group-hover:translate-x-4 group-hover:text-outline-dark transition-all duration-500 text-black">HERO</h1>
+                            </div>
+                            <div class="text-xs opacity-50 mono text-right leading-loose">Syncopate<br>700 / 8vw<br>LH: 1 / LS: Normal</div>
+                        </div>
+
+                        <div class="flex flex-col md:flex-row md:items-baseline gap-4 md:gap-8 pb-8 border-b border-black/5 group cursor-default">
+                            <div class="w-24 text-xs font-mono opacity-40 uppercase">h2</div>
+                            <div class="flex-1 overflow-hidden">
+                                <h2 class="display text-5xl md:text-6xl group-hover:translate-x-4 transition-all duration-500 text-black">SECTION</h2>
+                            </div>
+                            <div class="text-xs opacity-50 mono text-right leading-loose">Syncopate<br>400 / 6xl<br>LH: 1.1 / LS: Normal</div>
+                        </div>
+
+                        <div class="flex flex-col md:flex-row md:items-baseline gap-4 md:gap-8 pb-8 border-b border-black/5 group cursor-default">
+                            <div class="w-24 text-xs font-mono opacity-40 uppercase">h3</div>
+                            <div class="flex-1 overflow-hidden">
+                                <h3 class="font-body text-3xl md:text-4xl font-bold group-hover:translate-x-4 transition-all duration-500 text-black">Card Header Title</h3>
+                            </div>
+                            <div class="text-xs opacity-50 mono text-right leading-loose">Manrope<br>700 / 4xl<br>LH: 1.2 / LS: Normal</div>
+                        </div>
+
+                        <div class="flex flex-col md:flex-row md:items-baseline gap-4 md:gap-8 pb-8 border-b border-black/5 group cursor-default">
+                            <div class="w-24 text-xs font-mono opacity-40 uppercase">h4</div>
+                            <div class="flex-1 overflow-hidden">
+                                <h4 class="font-body text-xl md:text-2xl font-bold group-hover:translate-x-4 transition-all duration-500 text-black">Subsection Header</h4>
+                            </div>
+                            <div class="text-xs opacity-50 mono text-right leading-loose">Manrope<br>700 / 2xl<br>LH: 1.3 / LS: 0.02em</div>
+                        </div>
+                    </div>
+
+                    <!-- Body -->
+                    <div class="space-y-12 pt-8">
+                        <div class="flex flex-col md:flex-row items-start gap-4 md:gap-8 pb-8 border-b border-black/5">
+                            <div class="w-24 text-xs font-mono opacity-40 uppercase mt-2">body-lg</div>
+                            <div class="flex-1">
+                                <p class="text-xl md:text-2xl font-light leading-relaxed text-gray-800">We believe that architecture is frozen music. Our studio specializes in brutalist forms softened by biophilic integration. We create spaces that do not just shelter, but inspire.</p>
+                            </div>
+                            <div class="text-xs opacity-50 mono text-right mt-2 leading-loose">Manrope<br>300 / xl<br>LH: 1.6 / LS: Normal</div>
+                        </div>
+
+                        <div class="flex flex-col md:flex-row items-start gap-4 md:gap-8 pb-8 border-b border-black/5">
+                            <div class="w-24 text-xs font-mono opacity-40 uppercase mt-1">body</div>
+                            <div class="flex-1">
+                                <p class="text-base text-gray-600 leading-relaxed font-normal">Our philosophy is rooted in the belief that buildings should age, not deteriorate. We use materials that develop a patina, recording the passage of time over generations.</p>
+                            </div>
+                            <div class="text-xs opacity-50 mono text-right mt-1 leading-loose">Manrope<br>400 / base<br>LH: 1.6 / LS: Normal</div>
+                        </div>
+
+                        <div class="flex flex-col md:flex-row items-baseline gap-4 md:gap-8 pb-8 border-b border-black/5">
+                            <div class="w-24 text-xs font-mono opacity-40 uppercase">label</div>
+                            <div class="flex-1">
+                                <span class="text-xs uppercase tracking-[0.2em] font-bold text-black border-b border-black/20 pb-1">Contextual Helper Text</span>
+                            </div>
+                            <div class="text-xs opacity-50 mono text-right leading-loose">Manrope<br>700 / xs<br>LH: 1 / LS: 0.2em</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3) COLORS -->
+        <section id="colors" class="py-32 px-6 md:px-20 max-w-[1600px] mx-auto border-b border-black/10 relative">
+            <div class="flex items-center gap-4 mb-24 opacity-40 split-animate">
+                <div class="text-xs uppercase tracking-widest font-bold">02</div>
+                <div class="w-16 h-px bg-black"></div>
+                <div class="text-xs uppercase tracking-widest">Color Semantics & Roles</div>
+            </div>
+
+            <!-- Main Palette -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-20 text-black">
+                <!-- Color 1 -->
+                <div class="group relative aspect-[4/5] overflow-hidden border border-black/10 rounded">
+                    <div class="absolute inset-0 bg-[#E3E1DC] transition-transform duration-1000 group-hover:scale-105 origin-bottom"></div>
+                    <div class="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/20 to-transparent"></div>
+                    <div class="absolute inset-0 p-6 flex flex-col justify-between mix-blend-difference text-white">
+                        <div class="font-bold tracking-widest text-sm uppercase">Stone (BG)</div>
+                        <div class="mono text-[10px] space-y-1.5 opacity-80 backdrop-blur-sm bg-black/10 p-3 rounded">
+                            <div class="flex justify-between"><span>HEX</span><span>#E3E1DC</span></div>
+                            <div class="flex justify-between"><span>RGB</span><span>227 225 220</span></div>
+                            <div class="flex justify-between"><span>HSL</span><span>43 12% 88%</span></div>
+                            <div class="w-full h-px bg-white/20 my-2"></div>
+                            <div class="flex justify-between"><span>Role</span><span>Neutral/Bg</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Color 2 -->
+                <div class="group relative aspect-[4/5] overflow-hidden rounded">
+                    <div class="absolute inset-0 bg-[#121212] transition-transform duration-1000 group-hover:scale-105 origin-bottom"></div>
+                    <div class="absolute inset-0 p-6 flex flex-col justify-between text-white">
+                        <div class="font-bold tracking-widest text-sm uppercase">Dark Matter</div>
+                        <div class="mono text-[10px] space-y-1.5 opacity-80 bg-white/5 backdrop-blur-sm p-3 rounded border border-white/10">
+                            <div class="flex justify-between"><span>HEX</span><span>#121212</span></div>
+                            <div class="flex justify-between"><span>RGB</span><span>18 18 18</span></div>
+                            <div class="flex justify-between"><span>HSL</span><span>0 0% 7%</span></div>
+                            <div class="w-full h-px bg-white/20 my-2"></div>
+                            <div class="flex justify-between"><span>Role</span><span>Primary/Text</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Color 3 -->
+                <div class="group relative aspect-[4/5] overflow-hidden rounded">
+                    <div class="absolute inset-0 bg-[#374336] transition-transform duration-1000 group-hover:scale-105 origin-bottom"></div>
+                    <div class="absolute inset-0 p-6 flex flex-col justify-between text-white">
+                        <div class="font-bold tracking-widest text-sm uppercase">Deep Moss</div>
+                        <div class="mono text-[10px] space-y-1.5 opacity-80 bg-white/5 backdrop-blur-sm p-3 rounded border border-white/10">
+                            <div class="flex justify-between"><span>HEX</span><span>#374336</span></div>
+                            <div class="flex justify-between"><span>RGB</span><span>55 67 54</span></div>
+                            <div class="flex justify-between"><span>HSL</span><span>115 11% 24%</span></div>
+                            <div class="w-full h-px bg-white/20 my-2"></div>
+                            <div class="flex justify-between"><span>Role</span><span>Accent</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Color 4 -->
+                <div class="group relative aspect-[4/5] overflow-hidden border border-black/10 rounded">
+                    <div class="absolute inset-0 bg-[#FFFFFF] transition-transform duration-1000 group-hover:scale-105 origin-bottom"></div>
+                    <div class="absolute inset-0 p-6 flex flex-col justify-between mix-blend-difference text-white">
+                        <div class="font-bold tracking-widest text-sm uppercase">Clarity</div>
+                        <div class="mono text-[10px] space-y-1.5 opacity-80 backdrop-blur-sm bg-black/10 p-3 rounded">
+                            <div class="flex justify-between"><span>HEX</span><span>#FFFFFF</span></div>
+                            <div class="flex justify-between"><span>RGB</span><span>255 255 255</span></div>
+                            <div class="flex justify-between"><span>HSL</span><span>0 0% 100%</span></div>
+                            <div class="w-full h-px bg-white/20 my-2"></div>
+                            <div class="flex justify-between"><span>Role</span><span>Highlight/Text</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Feedback / Gradients context -->
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="h-48 bg-gradient-to-r from-[#121212] to-[#374336] p-8 flex flex-col justify-end text-white rounded">
+                    <div class="font-bold uppercase tracking-widest mb-2 text-sm">Theme Gradient</div>
+                    <div class="text-xs font-mono opacity-50">Participation: Decorative / Background Hover</div>
+                </div>
+                
+                <div class="h-48 glass-panel p-8 flex flex-col justify-end text-black rounded relative overflow-hidden group">
+                    <div class="absolute -right-10 -top-10 w-32 h-32 bg-white rounded-full blur-2xl opacity-60 group-hover:scale-150 transition-transform duration-1000"></div>
+                    <div class="relative z-10">
+                        <div class="font-bold uppercase tracking-widest mb-2 text-sm">Glassmorphism</div>
+                        <div class="text-xs font-mono opacity-50">Participation: Modals / Surface / Nav</div>
+                    </div>
+                </div>
+
+                <div class="h-48 border border-black/10 p-8 flex flex-col justify-center gap-4 rounded bg-white/30">
+                    <div class="text-xs uppercase opacity-40 font-bold mb-2">Feedback Roles</div>
+                    <div class="flex items-center gap-4">
+                        <div class="w-4 h-4 rounded-full bg-[#10B981]"></div>
+                        <div class="mono text-xs opacity-70">Success (#10B981) - AAA Contrast</div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="w-4 h-4 rounded-full bg-[#EF4444]"></div>
+                        <div class="mono text-xs opacity-70">Error (#EF4444) - AA Contrast</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4) COMPONENTS & ANIMATIONS -->
+        <section id="components" class="py-32 px-6 md:px-20 max-w-[1600px] mx-auto overflow-hidden border-b border-black/10">
+            <div class="flex items-center gap-4 mb-24 opacity-40 split-animate">
+                <div class="text-xs uppercase tracking-widest font-bold">03</div>
+                <div class="w-16 h-px bg-black"></div>
+                <div class="text-xs uppercase tracking-widest">Components & Motion</div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-20">
+                <!-- Left: Form Elements & Badges -->
+                <div class="space-y-20">
+                    <!-- Buttons -->
+                    <div>
+                        <h3 class="display text-2xl mb-10">Interactive Buttons</h3>
+                        <div class="bg-white p-12 rounded border border-black/5 shadow-sm space-y-8">
+                            <div>
+                                <div class="text-[10px] mono opacity-40 mb-3 uppercase tracking-widest">Primary / Glow</div>
+                                <button class="btn-glow group">
+                                    <span>Primary Action</span>
+                                </button>
+                                <p class="text-xs mt-3 opacity-50 font-mono">.btn-glow (Animated pseudo-element hover)</p>
+                            </div>
+                            
+                            <hr class="border-black/5">
+
+                            <div>
+                                <div class="text-[10px] mono opacity-40 mb-3 uppercase tracking-widest">Secondary / Outline</div>
+                                <button class="btn-outline">
+                                    Secondary Action
+                                </button>
+                                <p class="text-xs mt-3 opacity-50 font-mono">.btn-outline (Fill & Text color invert)</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Forms & Inputs -->
+                    <div>
+                        <h3 class="display text-2xl mb-10">Form Elements</h3>
+                        <div class="bg-white/50 backdrop-blur p-12 rounded border border-black/5 space-y-6 max-w-md shadow-sm">
+                            <div class="text-[10px] mono opacity-40 mb-6 uppercase tracking-widest">Animated Inputs</div>
+                            
+                            <div class="input-group">
+                                <input type="text" class="input-field" placeholder=" " id="inp1" required autocomplete="off">
+                                <label class="input-label" for="inp1">First Name</label>
+                            </div>
+                            <div class="input-group">
+                                <input type="email" class="input-field border-b-red-400" placeholder=" " id="inp2" required autocomplete="off" value="wrongmail.com">
+                                <label class="input-label text-red-500" for="inp2">Email Address</label>
+                                <span class="absolute right-0 top-4 text-red-500 text-xs"><i class="ph ph-warning-circle"></i></span>
+                            </div>
+
+                            <p class="text-xs mt-6 opacity-50 font-mono">Label translates to -0.75rem, scale down on focus/valid.</p>
+                        </div>
+                    </div>
+
+                    <!-- Badges & Tooltips & Modals -->
+                    <div>
+                        <h3 class="display text-2xl mb-10">Micro-Interactions</h3>
+                        <div class="flex flex-wrap gap-10 items-end border border-black/5 p-10 bg-white rounded shadow-sm">
+                            <div>
+                                <div class="text-[10px] mono opacity-40 mb-3 uppercase tracking-widest">Badges</div>
+                                <div class="flex gap-3">
+                                    <span class="badge badge-dark">New</span>
+                                    <span class="badge badge-accent">Featured</span>
+                                    <span class="badge bg-transparent border border-black text-black">draft</span>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <div class="text-[10px] mono opacity-40 mb-3 uppercase tracking-widest">Tooltips</div>
+                                <div class="tooltip-wrap bg-gray-100 p-2 rounded-full hover:bg-gray-200 transition-colors">
+                                    <i class="ph ph-info text-2xl text-black"></i>
+                                    <div class="tooltip-content">Contextual information drops here</div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="text-[10px] mono opacity-40 mb-3 uppercase tracking-widest">Modals</div>
+                                <button class="text-xs uppercase tracking-[0.2em] font-bold border-b-2 border-black pb-1 hover:text-gray-500 transition-colors" onclick="document.getElementById('demoModal').classList.add('active')">
+                                    Trigger Context Modal
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Parallax Stack & Architecture Cards -->
+                <div>
+                    <h3 class="display text-2xl mb-10">Parallax Stacking System</h3>
+                    <p class="text-sm text-gray-600 mb-8 font-light">Cards stack on top of each other utilizing CSS `position: sticky` mixed with GSAP ScrollTrigger for scale down and opacity fading on the previous card.</p>
+
+                    <div class="relative h-[800px] bg-[#121212] p-4 md:p-8 rounded-xl border border-white/10 overflow-y-auto hidden-scrollbar" id="card-scroll-demo">
+                        <div class="stack-container" style="padding-bottom: 20vh; height: 1600px;">
+                            
+                            <!-- Card 1 -->
+                            <div class="card-item" style="top: 20px; height: 350px; margin-bottom: 30px;">
+                                <div class="card-inner dark group cursor-pointer">
+                                    <div class="card-content p-6 md:p-10">
+                                        <div>
+                                            <div class="text-4xl display mb-2 opacity-10 font-bold mix-blend-difference">01</div>
+                                            <h3 class="text-2xl font-bold tracking-tight">Void House</h3>
+                                            <p class="text-[10px] mt-2 opacity-50 uppercase tracking-[0.2em]">Kyoto, Japan</p>
+                                        </div>
+                                        <div class="mt-4">
+                                            <button class="text-xs uppercase tracking-widest border-b border-white/30 pb-1 mt-6 opacity-0 group-hover:opacity-100 group-hover:translate-x-2 transition-all duration-300">View Project</button>
+                                        </div>
+                                    </div>
+                                    <div class="card-img-wrap">
+                                        <img src="./98984301b87c.webp" class="card-img" alt=""/>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Card 2 -->
+                            <div class="card-item" style="top: 40px; height: 350px; margin-bottom: 30px;">
+                                <div class="card-inner dark group cursor-pointer">
+                                    <div class="card-content p-6 md:p-10">
+                                        <div>
+                                            <div class="text-4xl display mb-2 opacity-10 font-bold mix-blend-difference">02</div>
+                                            <h3 class="text-2xl font-bold tracking-tight">Moss Bunker</h3>
+                                            <p class="text-[10px] mt-2 opacity-50 uppercase tracking-[0.2em]">Berlin, Germany</p>
+                                        </div>
+                                        <div class="mt-4">
+                                            <button class="text-xs uppercase tracking-widest border-b border-white/30 pb-1 mt-6 opacity-0 group-hover:opacity-100 group-hover:translate-x-2 transition-all duration-300">View Project</button>
+                                        </div>
+                                    </div>
+                                    <div class="card-img-wrap">
+                                        <img src="./23c4e5216783.webp" class="card-img" alt=""/>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Card 3 -->
+                            <div class="card-item" style="top: 60px; height: 350px; margin-bottom: 30px;">
+                                <div class="card-inner dark group cursor-pointer bg-white">
+                                    <div class="card-content p-6 md:p-10 mix-blend-difference">
+                                        <div>
+                                            <div class="text-4xl display mb-2 opacity-20 font-bold">03</div>
+                                            <h3 class="text-2xl font-bold tracking-tight">Sky Cliff</h3>
+                                            <p class="text-[10px] mt-2 opacity-50 uppercase tracking-[0.2em]">Reykjavik, Iceland</p>
+                                        </div>
+                                        <div class="mt-4">
+                                            <button class="text-xs uppercase tracking-widest border-b border-white/30 pb-1 mt-6 opacity-0 group-hover:opacity-100 group-hover:translate-x-2 transition-all duration-300">View Project</button>
+                                        </div>
+                                    </div>
+                                    <div class="card-img-wrap">
+                                        <img src="./020117376942.webp" class="card-img" alt=""/>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5) ICONS -->
+        <section id="icons" class="py-32 px-6 md:px-20 max-w-[1600px] mx-auto">
+            <div class="flex items-center gap-4 mb-24 opacity-40 split-animate">
+                <div class="text-xs uppercase tracking-widest font-bold">04</div>
+                <div class="w-16 h-px bg-black"></div>
+                <div class="text-xs uppercase tracking-widest">Vector Assets</div>
+            </div>
+
+            <p class="text-sm text-gray-600 mb-12 font-light max-w-2xl">
+                We utilize <strong class="text-black">Phosphor Icons</strong> for consistent visual weighting. Icons are used primarily for utility (navigation, UI controls, external links) and should be rendered at 24px base with variable stroke width.
+            </p>
+
+            <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-8 gap-6 text-center text-2xl font-light text-black">
+                <div class="aspect-square bg-white border border-black/5 hover:border-black/20 hover:shadow-lg transition-all cursor-pointer group rounded flex flex-col justify-center items-center gap-3">
+                    <i class="ph ph-arrow-right group-hover:translate-x-1 group-hover:text-black transition-all text-gray-400"></i>
+                    <span class="text-[9px] mono opacity-40 uppercase tracking-widest">arrow-right</span>
+                </div>
+                <div class="aspect-square bg-white border border-black/5 hover:border-black/20 hover:shadow-lg transition-all cursor-pointer group rounded flex flex-col justify-center items-center gap-3">
+                    <i class="ph ph-arrow-up-right group-hover:translate-x-1 group-hover:-translate-y-1 group-hover:text-black transition-all text-gray-400"></i>
+                    <span class="text-[9px] mono opacity-40 uppercase tracking-widest">external</span>
+                </div>
+                <div class="aspect-square bg-white border border-black/5 hover:border-black/20 hover:shadow-lg transition-all cursor-pointer group rounded flex flex-col justify-center items-center gap-3">
+                    <i class="ph ph-list group-hover:scale-110 group-hover:text-black transition-all text-gray-400"></i>
+                    <span class="text-[9px] mono opacity-40 uppercase tracking-widest">menu</span>
+                </div>
+                <div class="aspect-square bg-white border border-black/5 hover:border-black/20 hover:shadow-lg transition-all cursor-pointer group rounded flex flex-col justify-center items-center gap-3">
+                    <i class="ph ph-x group-hover:rotate-90 group-hover:text-black transition-all text-gray-400"></i>
+                    <span class="text-[9px] mono opacity-40 uppercase tracking-widest">close</span>
+                </div>
+                <div class="aspect-square bg-white border border-black/5 hover:border-black/20 hover:shadow-lg transition-all cursor-pointer group rounded flex flex-col justify-center items-center gap-3">
+                    <i class="ph ph-instagram-logo group-hover:scale-110 group-hover:text-black transition-all text-gray-400"></i>
+                    <span class="text-[9px] mono opacity-40 uppercase tracking-widest">social</span>
+                </div>
+                <div class="aspect-square bg-white border border-black/5 hover:border-black/20 hover:shadow-lg transition-all cursor-pointer group rounded flex flex-col justify-center items-center gap-3">
+                    <i class="ph ph-play group-hover:scale-110 group-hover:text-black transition-all text-gray-400"></i>
+                    <span class="text-[9px] mono opacity-40 uppercase tracking-widest">play</span>
+                </div>
+                <div class="aspect-square bg-white border border-black/5 hover:border-black/20 hover:shadow-lg transition-all cursor-pointer group rounded flex flex-col justify-center items-center gap-3">
+                    <i class="ph ph-magnifying-glass group-hover:-rotate-12 group-hover:text-black transition-all text-gray-400"></i>
+                    <span class="text-[9px] mono opacity-40 uppercase tracking-widest">search</span>
+                </div>
+                <div class="aspect-square bg-white border border-black/5 hover:border-black/20 hover:shadow-lg transition-all cursor-pointer group rounded flex flex-col justify-center items-center gap-3">
+                    <i class="ph ph-envelope-simple group-hover:-translate-y-1 group-hover:text-black transition-all text-gray-400"></i>
+                    <span class="text-[9px] mono opacity-40 uppercase tracking-widest">contact</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- FOOTER / NEXT -->
+        <footer class="py-40 bg-[var(--c-dark)] text-white text-center relative overflow-hidden flex flex-col justify-center items-center">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent z-10 pointer-events-none"></div>
+            <img src="./0cd68e7f5b6e.webp" class="absolute inset-0 w-full h-full object-cover opacity-10 scale-105 parallax-img" alt="Footer bg"/>
+            
+            <div class="ambient-glow" style="top: 80%; left: 50%;"></div>
+
+            <div class="relative z-20 flex flex-col items-center justify-center p-6 w-full">
+                <div class="text-xs uppercase tracking-[0.5em] mb-8 text-outline-dark mix-blend-plus-lighter opacity-60">End of Spec</div>
+                <h2 class="display text-[8vw] md:text-[6vw] mb-12 hover:text-outline transition-all duration-700 cursor-pointer block split-animate text-center leading-none">
+                    START BUILDING
+                </h2>
+                <div class="h-32 w-px bg-white/20 mt-10"></div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- MODAL COMPONENT -->
+    <div id="demoModal" class="modal-overlay">
+        <div class="modal-box relative">
+            <div class="absolute top-6 right-6 text-xl opacity-40 hover:opacity-100 hover:rotate-90 transition-all close-modal" onclick="document.getElementById('demoModal').classList.remove('active')">
+                <i class="ph ph-x"></i>
+            </div>
+            <div class="text-[10px] mono uppercase tracking-widest mb-4 opacity-50 text-black">Dialog Initialized</div>
+            <h3 class="display text-3xl mb-4 text-black">Design Review</h3>
+            <p class="font-light text-gray-600 mb-10 leading-relaxed text-sm">
+                Modals utilize a glassmorphism backdrop combined with a subtle scale-in animation via CSS transitions and cubic-bezier easing. They ensure users stay in context while capturing focus.
+            </p>
+            <div class="flex gap-4">
+                <button class="btn-glow flex-1" onclick="document.getElementById('demoModal').classList.remove('active')">Acknowledge</button>
+                <button class="btn-outline flex-1 border-gray-300 text-gray-500 hover:bg-gray-100 hover:text-black" onclick="document.getElementById('demoModal').classList.remove('active')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script>
+        gsap.registerPlugin(ScrollTrigger);
+
+        // LENIS SCROLL
+        const lenis = new Lenis({ 
+            duration: 1.2, 
+            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // match site ease
+            smooth: true 
+        });
+        function raf(time) { 
+            lenis.raf(time); 
+            requestAnimationFrame(raf); 
+        }
+        requestAnimationFrame(raf);
+
+        // TEXT SPLITTER UTILITY
+        document.querySelectorAll('.split-animate').forEach(el => {
+            const text = el.innerText;
+            const words = text.split(' ');
+            el.innerHTML = '';
+            words.forEach(word => {
+                const wrap = document.createElement('span');
+                wrap.className = 'word-wrap';
+                wrap.innerHTML = `<span class="word-inner">${word}&nbsp;</span>`;
+                el.appendChild(wrap);
+            });
+        });
+
+        // PRELOADER & INITIAL ANIMATION
+        const loadTl = gsap.timeline({
+            onComplete: () => {
+                document.body.style.opacity = 1;
+                initSite();
+            }
+        });
+
+        loadTl.to('.loader-bar', { width: '100%', duration: 1.2, ease: 'power2.inOut' })
+              .to('.loader-text', { y: -30, opacity: 0, duration: 0.5 })
+              .to('.loader', { yPercent: -100, duration: 1, ease: 'power4.inOut' });
+
+        function initSite() {
+            // Hero Animations
+            gsap.to('.hero-text-anim', { 
+                y: 0, duration: 1.5, stagger: 0.1, ease: 'power4.out' 
+            });
+            gsap.to('.hero-fade', { 
+                opacity: 1, duration: 2, stagger: 0.2, delay: 0.8 
+            });
+            
+            // Hero Parallax Background
+            gsap.to('#hero .parallax-img', {
+                yPercent: 20, ease: 'none',
+                scrollTrigger: { trigger: '#hero', start: 'top top', end: 'bottom top', scrub: true }
+            });
+
+            // Footer Parallax Background
+            gsap.to('footer .parallax-img', {
+                yPercent: 20, ease: 'none',
+                scrollTrigger: { trigger: 'footer', start: 'top bottom', end: 'bottom bottom', scrub: true }
+            });
+
+            // Ambient Glow breathe
+            gsap.to('.ambient-glow', {
+                scale: 1.1, opacity: 0.8, duration: 4, repeat: -1, yoyo: true, ease: 'sine.inOut'
+            });
+
+            // Scroll Reveal Text Words
+            document.querySelectorAll('.split-animate').forEach(el => {
+                gsap.to(el.querySelectorAll('.word-inner'), {
+                    y: "0%", duration: 1.2, ease: "power4.out", stagger: 0.03,
+                    scrollTrigger: { 
+                        trigger: el, start: "top 85%", toggleActions: "play none none reverse" 
+                    }
+                });
+            });
+
+            // Internal Card Scroll Demo setup
+            const demoCards = gsap.utils.toArray('#card-scroll-demo .card-item');
+            demoCards.forEach((card, i) => {
+                const nextCard = demoCards[i+1];
+                if (nextCard) {
+                    gsap.to(card.querySelector('.card-inner'), {
+                        scale: 0.9, opacity: 0.4, ease: "none",
+                        scrollTrigger: {
+                            scroller: '#card-scroll-demo',
+                            trigger: nextCard,
+                            start: "top bottom",
+                            end: "top 20%",
+                            scrub: true
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+</body>
+</html>
